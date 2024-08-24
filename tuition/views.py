@@ -14,5 +14,5 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ApplicationSerializer
     
 class TuitionReviewViewSet(viewsets.ModelViewSet):
-    queryset = models.Application.objects.all()
+    queryset = models.TuitionReview.objects.all()
     serializer_class = serializers.TuitionReviewSerializer

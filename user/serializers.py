@@ -2,6 +2,10 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .import models
 
+# login with email or username
+from django.contrib.auth import authenticate
+from django.utils.translation import gettext_lazy as _
+
 
 # User profile handle to get data and update
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -62,4 +66,33 @@ class UserProfileNormalSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Profile
         fields = '__all__'
+        
+# Login
+class UserLoginSerializer(serializers.Serializer):
+    # username = serializers.CharField(required=True)
+    # password = serializers.CharField(required=True)
+   
+    # Identifying with email or username 
+    identifier = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    
+    def validate(self, attrs):
+        identifier = attrs.get('identifier')
+        password = attrs.get('password')
+        user = authenticate(username=identifier, password=password)
+        if not user:
+            user = authenticate(username=self.get_username_by_email(identifier), password=password)
+        
+        if not user:
+            raise serializers.ValidationError(_('Invalid credentials, please try again.'))
+        
+        attrs['user'] = user
+        return attrs
+    
+    def get_username_by_email(self, email):
+        try:
+            user = User.objects.get(email=email)
+            return user.username
+        except User.DoesNotExist:
+            return None
     

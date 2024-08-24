@@ -33,7 +33,7 @@ class UserRegistrationApiView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             confirm_link = f"http://127.0.0.1:8000/user/activate/{uid}/{token}"
             email_subject = "Please Activate your account."
-            email_body = render_to_string('email_confirm.html',{'confirm_link':confirm_link})
+            email_body = render_to_string('email_confirm.html',{'confirm_link':confirm_link,'first_name':user.first_name,'last_name':user.last_name})
             email = EmailMultiAlternatives(email_subject,'',to=[user.email])
             email.attach_alternative(email_body,"text/html")
             email.send()
@@ -67,8 +67,46 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return user.profile
     
 class UserProfileViewSet(viewsets.ModelViewSet):
+    parser_classes = [IsAuthenticated]
     queryset = models.Profile.objects.all()
     serializer_class = serializers.UserProfileNormalSerializer
+    
+class UserLoginApiView(APIView):
+    # def post(self,request):
+    #     serializer = serializers.UserLoginSerializer(data=self.request.data)
+    #     if serializer.is_valid():
+    #         username = serializer.validated_data['username']
+    #         password = serializer.validated_data['password']
+    #         user = authenticate(username=username,password=password)
+            
+    #         if user:
+    #             token,_ = Token.objects.get_or_create(user=user)
+    #             return Response({'token':token.key, 'user_id':user.id})
+    #         else:
+    #             return Response({'error':'Invalid Credential'})
+    #     return Response(serializer.errors)
+    
+    # login with email address or username
+    def post(self, request):
+        print(request.data)
+        serializer = serializers.UserLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            token, _ = Token.objects.get_or_create(user=user)
+            login(request,user)
+            return Response({'token': token.key, 'user_id': user.id})
+        return Response(serializer.errors, status=400) 
+            
 
+# user logout
+
+class UserLogoutApiView(APIView):
+    def get(self, request):
+        if request.user.is_authenticated:
+            request.user.auth_token.delete()
+            logout(request)
+            return redirect('login')
+        else:
+            return Response({"message": "User is not authenticated."}, status=status.HTTP_400_BAD_REQUEST)
     
     
