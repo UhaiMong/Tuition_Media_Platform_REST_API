@@ -94,7 +94,7 @@ class UserLoginApiView(APIView):
             user = serializer.validated_data['user']
             token, _ = Token.objects.get_or_create(user=user)
             login(request,user)
-            return Response({'token': token.key, 'user_id': user.id})
+            return Response({'token': token.key, 'user_id': user.id,'message':'success'})
         return Response(serializer.errors, status=400) 
             
 

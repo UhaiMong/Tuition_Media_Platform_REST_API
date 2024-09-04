@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from .import models
 
+
+class AvailableTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.AvailableTime
+        fields = '__all__'
 class TuitionSerializer(serializers.ModelSerializer):
     available_time = serializers.StringRelatedField(many=True)
     class Meta:
